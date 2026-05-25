@@ -1,0 +1,27 @@
+@startuml MonitoraggioDashboard
+title Monitoraggio Progetto - Dashboard
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewDashboardProgetto" as VDP
+participant ":MonitoraggioController" as MC
+
+PM -> HPM : seleziona un progetto
+HPM --> PM : redirect → ViewDashboardProgetto
+
+PM -> VDP : accede alla dashboard
+VDP -> MC : mostraAvanzamento(progettoId)
+
+MC --> VDP : return {avanzamento%, taskPerStato, taskInRitardo, milestone, bugAperti}
+
+alt Progetto con dati completi
+    VDP --> PM : visualizza panoramica completa
+
+else Progetto senza task
+    VDP --> PM : dashboard con dati parziali
+
+else Progetto sospeso
+    VDP --> PM : dashboard in sola lettura
+end
+
+@enduml

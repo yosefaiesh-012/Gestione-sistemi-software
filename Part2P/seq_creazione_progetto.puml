@@ -1,0 +1,42 @@
+@startuml CreazioneProgetto
+title Creazione Progetto
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewCreazioneProgetto" as VCP
+participant ":ViewDettaglioProgetto" as VDP
+participant ":GestioneProgettoController" as GPC
+participant ":Progetto" as P
+
+PM -> HPM : sceglie "Crea nuovo Progetto"
+HPM --> PM : mostra ViewCreazioneProgetto
+
+PM -> VCP : inserisce nome, descrizione, dataInizio
+PM -> VCP : seleziona Project Manager responsabile
+PM -> VCP : conferma creazione
+
+VCP -> GPC : creaProgetto(nome, descrizione, dataInizio, projectManager)
+
+alt Dati validi e nome univoco
+    GPC -> P ** : crea()
+    GPC -> P : setStato("Attivo")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : return progettoId
+    GPC --> VCP : return {esito: ok, progettoId}
+    VCP --> PM : redirect → ViewDettaglioProgetto
+    VDP --> PM : mostra dettaglio progetto creato
+
+else Dati mancanti o non validi
+    GPC --> VCP : return {esito: errore, msg: "Dati non validi"}
+    VCP --> PM : mostra errori di validazione
+
+else Nome progetto già esistente
+    GPC --> VCP : return {esito: errore, msg: "Nome progetto già in uso"}
+    VCP --> PM : mostra errore nome duplicato
+
+else Data inizio antecedente alla data odierna
+    GPC --> VCP : return {esito: errore, msg: "Data inizio non valida"}
+    VCP --> PM : mostra errore data
+end
+
+@enduml

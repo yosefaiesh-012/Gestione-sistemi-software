@@ -1,0 +1,48 @@
+@startuml AssociazioneBugTask
+title Associazione Bug a Task
+
+actor "Sviluppatore" as DEV
+participant ":HomeSviluppatore" as HS
+participant ":ViewDettaglioBug" as VDB
+participant ":ViewModificaBug" as VMB
+participant ":GestioneBugDevController" as GBDEV
+participant ":Bug" as B
+participant ":Task" as T
+
+DEV -> HS : seleziona un bug in stato Aperto
+HS -> GBDEV : getElencoBugAssegnati()
+GBDEV --> HS : return lista bug
+DEV -> HS : apre il bug
+HS --> DEV : mostra ViewDettaglioBug
+
+DEV -> VDB : sceglie "Associa a Task"
+VDB --> DEV : mostra ViewModificaBug con elenco task del progetto
+
+DEV -> VMB : seleziona il task da associare
+VMB -> GBDEV : associaBugTask(bugId, taskId)
+
+GBDEV -> T : getDettaglioTask(taskId)
+T --> GBDEV : return task
+
+alt Task esistente e appartenente al progetto
+    GBDEV -> B : associaBugTask(taskId)
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : ok
+    GBDEV --> VMB : return {esito: ok}
+    VMB --> DEV : associazione registrata correttamente
+    VMB --> DEV : redirect → ViewDettaglioBug
+
+else Task inesistente
+    GBDEV --> VMB : return {esito: errore, msg: "Task non trovato"}
+    VMB --> DEV : mostra errore
+
+else Task non appartenente al progetto del bug
+    GBDEV --> VMB : return {esito: errore, msg: "Task non appartenente al progetto"}
+    VMB --> DEV : mostra errore
+
+else Bug già associato a un task
+    GBDEV --> VMB : return {esito: warning, msg: "Bug già associato a un task, confermare sostituzione"}
+    VMB --> DEV : mostra avviso e chiede conferma
+end
+
+@enduml

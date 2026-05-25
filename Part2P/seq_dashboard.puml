@@ -1,0 +1,50 @@
+@startuml MonitoraggioDashboard
+title Monitoraggio Progetto - Dashboard
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewDashboardProgetto" as VDP
+participant ":MonitoraggioController" as MC
+participant ":Progetto" as P
+participant ":Task" as T
+participant ":Milestone" as M
+participant ":Bug" as B
+
+PM -> HPM : seleziona un progetto
+HPM -> MC : mostraAvanzamento(progettoId)
+
+MC -> P : calcolaAvanzamento()
+note right of P : (task completati / task totali) × 100
+P --> MC : return percentuale
+
+MC -> T : getTaskPerStato(progettoId)
+T --> MC : return lista task per stato
+
+MC -> T : getTaskInRitardo(progettoId)
+note right of T : isInRitardo(): scadenza superata\ne stato != Completato/Validato
+T --> MC : return lista task in ritardo
+
+MC -> M : getStatoMilestone(progettoId)
+M --> MC : return stati milestone
+
+MC -> B : getBugAperti(progettoId)
+B --> MC : return lista bug aperti
+
+MC -> MC : mostraStatistiche(progettoId)
+MC --> HPM : return {avanzamento%, taskPerStato, taskInRitardo, milestone, bugAperti}
+HPM --> PM : mostra ViewDashboardProgetto
+
+alt Progetto con dati completi
+    PM -> VDP : consulta indicatori aggregati
+    VDP --> PM : visualizza panoramica completa
+
+else Progetto senza task
+    MC --> HPM : return {avanzamento: 0%, ...}
+    VDP --> PM : dashboard con dati parziali
+
+else Progetto sospeso
+    MC --> HPM : return dati in sola lettura
+    VDP --> PM : dashboard in sola lettura
+end
+
+@enduml

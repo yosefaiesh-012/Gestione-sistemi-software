@@ -1,0 +1,38 @@
+@startuml Autenticazione
+title Autenticazione Utente
+
+actor Utente
+participant ":ViewLogin" as VL
+participant ":AutenticazioneController" as AC
+participant ":Utente" as U
+
+Utente -> VL : inserisce username e password
+VL -> AC : verificaCredenziali(username, password)
+AC -> U : autenticazione(username, password)
+U -> U : verifica hashing password
+U --> AC : return Mansione
+
+alt Credenziali valide
+    AC -> AC : genera token di sessione
+    AC --> VL : return {esito: ok, ruolo}
+
+    alt ruolo = Amministratore
+        VL --> Utente : redirect → HomeAmministratore
+    else ruolo = ProjectManager
+        VL --> Utente : redirect → HomeProjectManager
+    else ruolo = Sviluppatore
+        VL --> Utente : redirect → HomeSviluppatore
+    else ruolo = Tester
+        VL --> Utente : redirect → HomeTester
+    end
+
+else Credenziali non valide
+    AC --> VL : return {esito: errore, msg: "Credenziali errate"}
+    VL --> Utente : mostra messaggio di errore
+
+else Troppi tentativi falliti
+    AC --> VL : return {esito: bloccato}
+    VL --> Utente : mostra avviso blocco account
+end
+
+@enduml

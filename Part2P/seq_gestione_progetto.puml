@@ -1,0 +1,113 @@
+@startuml GestioneProgetto
+title Gestione Progetto - Creazione, Sospensione e Chiusura
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewCreazioneProgetto" as VCP
+participant ":ViewDettaglioProgetto" as VDP
+participant ":ViewModificaProgetto" as VMP
+participant ":ViewArchivioProgetti" as VAP
+participant ":GestioneProgettoController" as GPC
+participant ":Progetto" as P
+
+== Creazione Progetto ==
+
+PM -> HPM : sceglie "Crea nuovo Progetto"
+HPM --> PM : mostra ViewCreazioneProgetto
+
+PM -> VCP : inserisce nome, descrizione, dataInizio, projectManager
+PM -> VCP : conferma creazione
+
+VCP -> GPC : creaProgetto(nome, descrizione, dataInizio, projectManager)
+
+alt Dati validi e nome univoco
+    GPC -> P ** : crea()
+    GPC -> P : setStato("Attivo")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : return progettoId
+    GPC --> VCP : return {esito: ok, progettoId}
+    VCP --> PM : redirect → ViewDettaglioProgetto
+
+else Dati mancanti o non validi
+    GPC --> VCP : return {esito: errore, msg: "Dati non validi"}
+    VCP --> PM : mostra errori di validazione
+
+else Nome progetto già esistente
+    GPC --> VCP : return {esito: errore, msg: "Nome progetto già in uso"}
+    VCP --> PM : mostra errore nome duplicato
+end
+
+== Modifica e Sospensione Progetto ==
+
+PM -> HPM : seleziona un progetto attivo
+HPM --> PM : mostra ViewDettaglioProgetto
+PM -> VDP : sceglie "Modifica Progetto"
+VDP --> PM : mostra ViewModificaProgetto
+
+PM -> VMP : aggiorna i dati del progetto
+VMP -> GPC : modificaProgetto(progettoId, datiAggiornati)
+
+alt Dati validi
+    GPC -> P : modificaProgetto()
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VMP : return {esito: ok}
+    VMP --> PM : modifiche salvate
+
+else Dati non validi
+    GPC --> VMP : return {esito: errore, msg: "Dati non validi"}
+    VMP --> PM : mostra errori di validazione
+end
+
+PM -> VDP : sceglie "Sospendi Progetto"
+VDP -> GPC : sospendiProgetto(progettoId)
+
+alt Progetto attivo
+    GPC -> P : setStato("Sospeso")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : progetto sospeso, operazioni operative bloccate
+
+else Progetto già chiuso o archiviato
+    GPC --> VDP : return {esito: errore, msg: "Operazione non consentita"}
+    VDP --> PM : mostra errore
+end
+
+== Chiusura e Archiviazione Progetto ==
+
+PM -> VDP : sceglie "Chiudi Progetto"
+VDP -> GPC : chiudiProgetto(progettoId)
+
+alt Tutti i task e bug completati o chiusi
+    GPC -> P : setStato("Chiuso")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : progetto chiuso correttamente
+
+else Task o bug ancora aperti
+    GPC --> VDP : return {esito: errore, msg: "Task o bug ancora aperti"}
+    VDP --> PM : mostra errore con elenco elementi pendenti
+
+else Progetto sospeso
+    GPC --> VDP : return {esito: errore, msg: "Riattivare il progetto prima di chiuderlo"}
+    VDP --> PM : mostra errore
+end
+
+PM -> VDP : sceglie "Archivia Progetto"
+VDP -> GPC : archiviaProgetto(progettoId)
+
+alt Progetto in stato "Chiuso"
+    GPC -> P : setStato("Archiviato")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : redirect → ViewArchivioProgetti
+
+else Progetto non ancora chiuso
+    GPC --> VDP : return {esito: errore, msg: "Archiviare solo progetti chiusi"}
+    VDP --> PM : mostra errore
+end
+
+@enduml

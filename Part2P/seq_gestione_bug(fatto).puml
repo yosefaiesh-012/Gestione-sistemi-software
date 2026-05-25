@@ -1,0 +1,75 @@
+@startuml GestioneBug
+title Gestione Bug - Segnalazione, Assegnazione e Risoluzione
+
+actor "Sviluppatore" as DEV
+participant ":HomeSviluppatore" as HS
+participant ":ViewSegnalazioneBug" as VSB
+participant ":ViewDettaglioBug" as VDB
+participant ":ViewModificaBug" as VMB
+participant ":GestioneBugDevController" as GBDEV
+participant ":Bug" as B
+
+== Segnalazione Bug ==
+
+DEV -> HS : seleziona un task e sceglie "Segnala Bug"
+HS --> DEV : mostra ViewSegnalazioneBug
+
+DEV -> VSB : inserisce nome, descrizione, priorità
+DEV -> VSB : (opzionale) associa il bug a un task
+DEV -> VSB : conferma segnalazione
+
+VSB -> GBDEV : segnalaBug(nome, descrizione, priorità, taskAssociato)
+
+alt Dati validi
+    GBDEV -> B ** : crea()
+    GBDEV -> B : associaBugTask(taskAssociato)
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : return bugId
+    GBDEV --> VSB : return {esito: ok, bugId}
+    VSB --> DEV : redirect → ViewDettaglioBug
+
+else Dati mancanti o non validi
+    GBDEV --> VSB : return {esito: errore, msg: "Dati non validi"}
+    VSB --> DEV : mostra errori di validazione
+
+else Bug duplicato rilevato
+    GBDEV --> VSB : return {esito: warning, msg: "Possibile duplicato rilevato"}
+    VSB --> DEV : mostra avviso duplicato, chiede conferma
+end
+
+== Assegnazione Bug ==
+
+DEV -> VDB : seleziona bug e sceglie "Assegna"
+VDB -> GBDEV : assegnaBug(bugId, responsabile)
+
+alt Utente valido e autorizzato
+    GBDEV -> B : setResponsabile(responsabile)
+    GBDEV -> B : setStato("In Lavorazione")
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : ok
+    GBDEV --> VDB : return {esito: ok}
+    VDB --> DEV : bug assegnato correttamente
+
+else Utente non valido
+    GBDEV --> VDB : return {esito: errore, msg: "Utente non valido"}
+    VDB --> DEV : mostra errore assegnazione
+end
+
+== Risoluzione Bug ==
+
+DEV -> VMB : aggiorna stato bug a "Risolto"
+VMB -> GBDEV : aggiornaStato(bugId, "Risolto")
+
+alt Transizione di stato valida
+    GBDEV -> B : setStato("Risolto")
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : ok
+    GBDEV --> VMB : return {esito: ok}
+    VMB --> DEV : bug marcato come risolto, in attesa di verifica tester
+
+else Transizione di stato non consentita
+    GBDEV --> VMB : return {esito: errore, msg: "Transizione non valida"}
+    VMB --> DEV : mostra errore
+end
+
+@enduml

@@ -1,0 +1,47 @@
+@startuml AssegnazioneRuolo
+title Assegnazione Ruolo Utente
+
+actor "Amministratore" as ADMIN
+participant ":HomeAmministratore" as HA
+participant ":ViewDettaglioUtente" as VDU
+participant ":ViewModificaUtente" as VMU
+participant ":GestioneUtentiController" as GUC
+participant ":Utente" as U
+
+ADMIN -> HA : accede alla gestione utenti
+HA -> GUC : mostraElencoUtenti()
+GUC --> HA : return lista utenti registrati
+ADMIN -> HA : seleziona un utente
+HA --> ADMIN : mostra ViewDettaglioUtente
+
+ADMIN -> VDU : sceglie "Modifica Ruolo"
+VDU --> ADMIN : mostra ViewModificaUtente con ruolo attuale
+
+ADMIN -> VMU : seleziona nuovo ruolo
+VMU -> GUC : assegnaRuolo(userId, nuovoRuolo)
+
+GUC -> U : getRuolo()
+U --> GUC : return ruoloAttuale
+
+alt Ruolo valido e diverso da quello attuale
+    GUC -> U : setRuolo(nuovoRuolo)
+    GUC -> U : registraStoricoModifiche()
+    U --> GUC : ok
+    GUC --> VMU : return {esito: ok}
+    VMU --> ADMIN : ruolo aggiornato correttamente
+    VMU --> ADMIN : redirect → ViewDettaglioUtente
+
+else Ruolo non valido
+    GUC --> VMU : return {esito: errore, msg: "Ruolo non valido"}
+    VMU --> ADMIN : mostra errore
+
+else Ruolo uguale a quello attuale
+    GUC --> VMU : return {esito: errore, msg: "Ruolo già assegnato"}
+    VMU --> ADMIN : mostra avviso
+
+else Utente inesistente
+    GUC --> VMU : return {esito: errore, msg: "Utente non trovato"}
+    VMU --> ADMIN : mostra errore
+end
+
+@enduml

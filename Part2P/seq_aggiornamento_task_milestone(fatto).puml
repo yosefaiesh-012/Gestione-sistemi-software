@@ -1,0 +1,56 @@
+@startuml AggiornamentoStatoTaskMilestone
+title Aggiornamento Stato Task e Propagazione a Milestone
+
+actor "Sviluppatore" as DEV
+participant ":HomeSviluppatore" as HS
+participant ":ViewModificaTask" as VMT
+participant ":GestioneTaskDevController" as GTDEV
+participant ":GestioneMilestoneController" as GMC
+participant ":MonitoraggioController" as MC
+participant ":Task" as T
+participant ":Milestone" as M
+
+DEV -> HS : seleziona task assegnato
+HS -> GTDEV : getElencoTaskAssegnati()
+GTDEV --> HS : return lista task
+DEV -> HS : apre il task
+HS --> DEV : mostra ViewModificaTask
+
+DEV -> VMT : aggiorna stato (es. "Completato")
+VMT -> GTDEV : aggiornaStato(taskId, nuovoStato)
+
+GTDEV -> T : isInRitardo()
+T --> GTDEV : return boolean
+GTDEV -> T : setStato(nuovoStato)
+GTDEV -> T : registraStoricoModifiche()
+T --> GTDEV : ok
+GTDEV --> VMT : return {esito: ok}
+
+note over GTDEV, GMC : Evento automatico: Aggiornamento Stato Task
+
+GTDEV -> GMC : aggiornaStatoMilestone(milestoneId)
+GMC -> M : calcolaStato()
+M -> M : controllaStatoTaskAssociati()
+
+alt Tutti i task completati o validati
+    M -> M : setStato("Completata")
+    M --> GMC : ok
+    GMC --> GTDEV : milestone aggiornata
+
+else Task ancora in corso
+    M -> M : setStato("In Corso")
+    M --> GMC : ok
+    GMC --> GTDEV : milestone aggiornata
+
+else Nessun task associato
+    M --> GMC : nessun aggiornamento
+    GMC --> GTDEV : milestone invariata
+end
+
+GTDEV -> MC : calcolaAvanzamento(progettoId)
+MC -> MC : getTaskInRitardo()
+MC --> GTDEV : avanzamento aggiornato
+
+VMT --> DEV : mostra conferma aggiornamento
+
+@enduml

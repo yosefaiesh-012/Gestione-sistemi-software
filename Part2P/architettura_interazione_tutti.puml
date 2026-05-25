@@ -1,0 +1,462 @@
+@startuml Autenticazione
+title Autenticazione Utente
+
+actor Utente
+participant ":ViewLogin" as VL
+participant ":AutenticazioneController" as AC
+participant ":Utente" as U
+
+Utente -> VL : inserisce username e password
+VL -> AC : verificaCredenziali(username, password)
+AC -> U : autenticazione(username, password)
+U -> U : verifica hashing password
+U --> AC : return Mansione
+
+alt Credenziali valide
+    AC -> AC : genera token di sessione
+    AC --> VL : return {esito: ok, ruolo}
+
+    alt ruolo = Amministratore
+        VL --> Utente : redirect → HomeAmministratore
+    else ruolo = ProjectManager
+        VL --> Utente : redirect → HomeProjectManager
+    else ruolo = Sviluppatore
+        VL --> Utente : redirect → HomeSviluppatore
+    else ruolo = Tester
+        VL --> Utente : redirect → HomeTester
+    end
+
+else Credenziali non valide
+    AC --> VL : return {esito: errore, msg: "Credenziali errate"}
+    VL --> Utente : mostra messaggio di errore
+
+else Troppi tentativi falliti
+    AC --> VL : return {esito: bloccato}
+    VL --> Utente : mostra avviso blocco account
+end
+
+@enduml
+
+@startuml GestioneProgetto
+title Gestione Progetto - Creazione, Sospensione e Chiusura
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewCreazioneProgetto" as VCP
+participant ":ViewDettaglioProgetto" as VDP
+participant ":ViewModificaProgetto" as VMP
+participant ":ViewArchivioProgetti" as VAP
+participant ":GestioneProgettoController" as GPC
+participant ":Progetto" as P
+
+== Creazione Progetto ==
+
+PM -> HPM : sceglie "Crea nuovo Progetto"
+HPM --> PM : mostra ViewCreazioneProgetto
+
+PM -> VCP : inserisce nome, descrizione, dataInizio, projectManager
+PM -> VCP : conferma creazione
+
+VCP -> GPC : creaProgetto(nome, descrizione, dataInizio, projectManager)
+
+alt Dati validi e nome univoco
+    GPC -> P ** : crea()
+    GPC -> P : setStato("Attivo")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : return progettoId
+    GPC --> VCP : return {esito: ok, progettoId}
+    VCP --> PM : redirect → ViewDettaglioProgetto
+
+else Dati mancanti o non validi
+    GPC --> VCP : return {esito: errore, msg: "Dati non validi"}
+    VCP --> PM : mostra errori di validazione
+
+else Nome progetto già esistente
+    GPC --> VCP : return {esito: errore, msg: "Nome progetto già in uso"}
+    VCP --> PM : mostra errore nome duplicato
+end
+
+== Modifica e Sospensione Progetto ==
+
+PM -> HPM : seleziona un progetto attivo
+HPM --> PM : mostra ViewDettaglioProgetto
+PM -> VDP : sceglie "Modifica Progetto"
+VDP --> PM : mostra ViewModificaProgetto
+
+PM -> VMP : aggiorna i dati del progetto
+VMP -> GPC : modificaProgetto(progettoId, datiAggiornati)
+
+alt Dati validi
+    GPC -> P : modificaProgetto()
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VMP : return {esito: ok}
+    VMP --> PM : modifiche salvate
+
+else Dati non validi
+    GPC --> VMP : return {esito: errore, msg: "Dati non validi"}
+    VMP --> PM : mostra errori di validazione
+end
+
+PM -> VDP : sceglie "Sospendi Progetto"
+VDP -> GPC : sospendiProgetto(progettoId)
+
+alt Progetto attivo
+    GPC -> P : setStato("Sospeso")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : progetto sospeso, operazioni operative bloccate
+
+else Progetto già chiuso o archiviato
+    GPC --> VDP : return {esito: errore, msg: "Operazione non consentita"}
+    VDP --> PM : mostra errore
+end
+
+== Chiusura e Archiviazione Progetto ==
+
+PM -> VDP : sceglie "Chiudi Progetto"
+VDP -> GPC : chiudiProgetto(progettoId)
+
+alt Tutti i task e bug completati o chiusi
+    GPC -> P : setStato("Chiuso")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : progetto chiuso correttamente
+
+else Task o bug ancora aperti
+    GPC --> VDP : return {esito: errore, msg: "Task o bug ancora aperti"}
+    VDP --> PM : mostra errore con elenco elementi pendenti
+
+else Progetto sospeso
+    GPC --> VDP : return {esito: errore, msg: "Riattivare il progetto prima di chiuderlo"}
+    VDP --> PM : mostra errore
+end
+
+PM -> VDP : sceglie "Archivia Progetto"
+VDP -> GPC : archiviaProgetto(progettoId)
+
+alt Progetto in stato "Chiuso"
+    GPC -> P : setStato("Archiviato")
+    GPC -> P : registraStoricoModifiche()
+    P --> GPC : ok
+    GPC --> VDP : return {esito: ok}
+    VDP --> PM : redirect → ViewArchivioProgetti
+
+else Progetto non ancora chiuso
+    GPC --> VDP : return {esito: errore, msg: "Archiviare solo progetti chiusi"}
+    VDP --> PM : mostra errore
+end
+
+@enduml
+
+@startuml CreazioneAssegnazioneTask
+title Creazione e Assegnazione Task
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewCreazioneTask" as VCT
+participant ":ViewDettaglioTask" as VDT
+participant ":GestioneTaskPMController" as GTPM
+participant ":Task" as T
+
+PM -> HPM : seleziona progetto e sceglie "Crea nuovo Task"
+HPM --> PM : mostra ViewCreazioneTask
+
+PM -> VCT : inserisce nome, descrizione, priorità, scadenza
+PM -> VCT : seleziona utente assegnatario
+PM -> VCT : (opzionale) seleziona milestone associata
+PM -> VCT : (opzionale) definisce dipendenze
+PM -> VCT : conferma creazione
+
+VCT -> GTPM : creaTask(nome, descrizione, priorità, scadenza, assegnatario, milestone, dipendenze)
+
+alt Dati validi
+    GTPM -> T ** : crea()
+    GTPM -> T : aggiungiDipendenza()
+    GTPM -> T : assegnaTask(assegnatario)
+    GTPM -> T : registraStoricoModifiche()
+    T --> GTPM : return taskId
+    GTPM --> VCT : return {esito: ok, taskId}
+    VCT --> PM : redirect → ViewDettaglioTask
+
+else Dati mancanti o non validi
+    GTPM --> VCT : return {esito: errore, msg: "Dati non validi"}
+    VCT --> PM : mostra errori di validazione
+
+else Dipendenze incoerenti
+    GTPM --> VCT : return {esito: errore, msg: "Dipendenze circolari o task inesistente"}
+    VCT --> PM : mostra errore dipendenze
+
+else Utente assegnato non valido
+    GTPM --> VCT : return {esito: errore, msg: "Utente non valido"}
+    VCT --> PM : mostra errore assegnazione
+end
+
+@enduml
+
+@startuml AggiornamentoStatoTaskMilestone
+title Aggiornamento Stato Task e Propagazione a Milestone
+
+actor "Sviluppatore" as DEV
+participant ":HomeSviluppatore" as HS
+participant ":ViewModificaTask" as VMT
+participant ":GestioneTaskDevController" as GTDEV
+participant ":GestioneMilestoneController" as GMC
+participant ":MonitoraggioController" as MC
+participant ":Task" as T
+participant ":Milestone" as M
+
+DEV -> HS : seleziona task assegnato
+HS -> GTDEV : getElencoTaskAssegnati()
+GTDEV --> HS : return lista task
+DEV -> HS : apre il task
+HS --> DEV : mostra ViewModificaTask
+
+DEV -> VMT : aggiorna stato (es. "Completato")
+VMT -> GTDEV : aggiornaStato(taskId, nuovoStato)
+
+GTDEV -> T : isInRitardo()
+T --> GTDEV : return boolean
+GTDEV -> T : setStato(nuovoStato)
+GTDEV -> T : registraStoricoModifiche()
+T --> GTDEV : ok
+GTDEV --> VMT : return {esito: ok}
+
+note over GTDEV, GMC : Evento automatico: Aggiornamento Stato Task
+
+GTDEV -> GMC : aggiornaStatoMilestone(milestoneId)
+GMC -> M : calcolaStato()
+M -> M : controllaStatoTaskAssociati()
+
+alt Tutti i task completati o validati
+    M -> M : setStato("Completata")
+    M --> GMC : ok
+    GMC --> GTDEV : milestone aggiornata
+
+else Task ancora in corso
+    M -> M : setStato("In Corso")
+    M --> GMC : ok
+    GMC --> GTDEV : milestone aggiornata
+
+else Nessun task associato
+    M --> GMC : nessun aggiornamento
+    GMC --> GTDEV : milestone invariata
+end
+
+GTDEV -> MC : calcolaAvanzamento(progettoId)
+MC -> MC : getTaskInRitardo()
+MC --> GTDEV : avanzamento aggiornato
+
+VMT --> DEV : mostra conferma aggiornamento
+
+@enduml
+
+@startuml GestioneBug
+title Gestione Bug - Segnalazione, Assegnazione e Risoluzione
+
+actor "Sviluppatore" as DEV
+participant ":HomeSviluppatore" as HS
+participant ":ViewSegnalazioneBug" as VSB
+participant ":ViewDettaglioBug" as VDB
+participant ":ViewModificaBug" as VMB
+participant ":GestioneBugDevController" as GBDEV
+participant ":Bug" as B
+
+== Segnalazione Bug ==
+
+DEV -> HS : seleziona un task e sceglie "Segnala Bug"
+HS --> DEV : mostra ViewSegnalazioneBug
+
+DEV -> VSB : inserisce nome, descrizione, priorità
+DEV -> VSB : (opzionale) associa il bug a un task
+DEV -> VSB : conferma segnalazione
+
+VSB -> GBDEV : segnalaBug(nome, descrizione, priorità, taskAssociato)
+
+alt Dati validi
+    GBDEV -> B ** : crea()
+    GBDEV -> B : associaBugTask(taskAssociato)
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : return bugId
+    GBDEV --> VSB : return {esito: ok, bugId}
+    VSB --> DEV : redirect → ViewDettaglioBug
+
+else Dati mancanti o non validi
+    GBDEV --> VSB : return {esito: errore, msg: "Dati non validi"}
+    VSB --> DEV : mostra errori di validazione
+
+else Bug duplicato rilevato
+    GBDEV --> VSB : return {esito: warning, msg: "Possibile duplicato rilevato"}
+    VSB --> DEV : mostra avviso duplicato, chiede conferma
+end
+
+== Assegnazione Bug ==
+
+DEV -> VDB : seleziona bug e sceglie "Assegna"
+VDB -> GBDEV : assegnaBug(bugId, responsabile)
+
+alt Utente valido e autorizzato
+    GBDEV -> B : setResponsabile(responsabile)
+    GBDEV -> B : setStato("In Lavorazione")
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : ok
+    GBDEV --> VDB : return {esito: ok}
+    VDB --> DEV : bug assegnato correttamente
+
+else Utente non valido
+    GBDEV --> VDB : return {esito: errore, msg: "Utente non valido"}
+    VDB --> DEV : mostra errore assegnazione
+end
+
+== Risoluzione Bug ==
+
+DEV -> VMB : aggiorna stato bug a "Risolto"
+VMB -> GBDEV : aggiornaStato(bugId, "Risolto")
+
+alt Transizione di stato valida
+    GBDEV -> B : setStato("Risolto")
+    GBDEV -> B : registraStoricoModifiche()
+    B --> GBDEV : ok
+    GBDEV --> VMB : return {esito: ok}
+    VMB --> DEV : bug marcato come risolto, in attesa di verifica tester
+
+else Transizione di stato non consentita
+    GBDEV --> VMB : return {esito: errore, msg: "Transizione non valida"}
+    VMB --> DEV : mostra errore
+end
+
+@enduml
+
+@startuml ControlloQualita
+title Controllo Qualità - Validazione Task e Verifica Bug
+
+actor "Tester" as TST
+participant ":HomeTester" as HT
+participant ":ViewValidazioneTask" as VVT
+participant ":ViewVerificaBug" as VVB
+participant ":ControlloQualitàController" as CQC
+participant ":GestioneTaskDevController" as GTDEV
+participant ":GestioneBugTesterController" as GBTC
+participant ":Task" as T
+participant ":Bug" as B
+
+== Validazione Task ==
+
+TST -> HT : accede alla sezione Controllo Qualità
+HT -> CQC : mostraTaskDaValidare()
+CQC --> HT : return lista task in stato "Completato"
+TST -> HT : seleziona un task
+HT --> TST : mostra ViewValidazioneTask
+
+TST -> VVT : esamina il task ed esprime esito
+
+alt Validazione positiva
+    VVT -> CQC : validaTask(taskId)
+    CQC -> GTDEV : aggiornaStato(taskId, "Validato")
+    GTDEV -> T : setStato("Validato")
+    GTDEV -> T : registraStoricoModifiche()
+    T --> GTDEV : ok
+    CQC -> CQC : registraStoricoVerifiche()
+    CQC --> VVT : return {esito: ok}
+    VVT --> TST : task validato con successo
+
+else Rifiuto / Riapertura
+    VVT -> CQC : rifiutaTask(taskId, motivazione)
+    CQC -> GTDEV : aggiornaStato(taskId, "Da Fare")
+    GTDEV -> T : setStato("Da Fare")
+    GTDEV -> T : registraStoricoModifiche()
+    T --> GTDEV : ok
+    CQC -> CQC : registraStoricoVerifiche()
+    CQC --> VVT : return {esito: ok}
+    VVT --> TST : task riaperto
+
+else Task non nello stato corretto
+    CQC --> VVT : return {esito: errore, msg: "Operazione non consentita"}
+    VVT --> TST : mostra errore
+end
+
+== Verifica Bug ==
+
+TST -> HT : accede ai bug da verificare
+HT -> CQC : mostraBugDaVerificare()
+CQC --> HT : return lista bug in stato "Risolto"
+TST -> HT : seleziona un bug
+HT --> TST : mostra ViewVerificaBug
+
+TST -> VVB : esamina il bug ed esprime esito
+
+alt Bug correttamente risolto
+    VVB -> CQC : verificaBug(bugId)
+    CQC -> GBTC : aggiornaStato(bugId, "Chiuso")
+    GBTC -> B : setStato("Chiuso")
+    GBTC -> B : registraStoricoModifiche()
+    B --> GBTC : ok
+    CQC -> CQC : registraStoricoVerifiche()
+    CQC --> VVB : return {esito: ok}
+    VVB --> TST : bug chiuso con successo
+
+else Bug non risolto correttamente
+    VVB -> CQC : riapriBug(bugId, motivazione)
+    CQC -> GBTC : aggiornaStato(bugId, "Aperto")
+    GBTC -> B : setStato("Aperto")
+    GBTC -> B : registraStoricoModifiche()
+    B --> GBTC : ok
+    CQC -> CQC : registraStoricoVerifiche()
+    CQC --> VVB : return {esito: ok}
+    VVB --> TST : bug riaperto
+end
+
+@enduml
+
+@startuml MonitoraggioDashboard
+title Monitoraggio Progetto - Dashboard
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM
+participant ":ViewDashboardProgetto" as VDP
+participant ":MonitoraggioController" as MC
+participant ":Progetto" as P
+participant ":Task" as T
+participant ":Milestone" as M
+participant ":Bug" as B
+
+PM -> HPM : seleziona un progetto
+HPM -> MC : mostraAvanzamento(progettoId)
+
+MC -> P : calcolaAvanzamento()
+note right of P : (task completati / task totali) × 100
+P --> MC : return percentuale
+
+MC -> T : getTaskPerStato(progettoId)
+T --> MC : return lista task per stato
+
+MC -> T : getTaskInRitardo(progettoId)
+note right of T : isInRitardo(): scadenza superata\ne stato != Completato/Validato
+T --> MC : return lista task in ritardo
+
+MC -> M : getStatoMilestone(progettoId)
+M --> MC : return stati milestone
+
+MC -> B : getBugAperti(progettoId)
+B --> MC : return lista bug aperti
+
+MC -> MC : mostraStatistiche(progettoId)
+MC --> HPM : return {avanzamento%, taskPerStato, taskInRitardo, milestone, bugAperti}
+HPM --> PM : mostra ViewDashboardProgetto
+
+alt Progetto con dati completi
+    PM -> VDP : consulta indicatori aggregati
+    VDP --> PM : visualizza panoramica completa
+
+else Progetto senza task
+    MC --> HPM : return {avanzamento: 0%, ...}
+    VDP --> PM : dashboard con dati parziali
+
+else Progetto sospeso
+    MC --> HPM : return dati in sola lettura
+    VDP --> PM : dashboard in sola lettura
+end
+
+@enduml
