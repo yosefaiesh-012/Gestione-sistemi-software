@@ -1,0 +1,48 @@
+@startuml Sequenza_Creazione_Progetto
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Creazione Progetto
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM #E8F5E9
+participant ":ViewCreazioneProgetto" as VCP #E8F5E9
+participant ":ViewDettaglioProgetto" as VDP #E8F5E9
+participant ":GestioneProgettoController" as GPC #E3F2FD
+participant ":Progetto" as P #F5F8FA
+
+PM -> HPM : sceglie "Crea nuovo Progetto"
+HPM -> VCP : mostra ViewCreazioneProgetto
+VCP --> PM : mostra form
+PM -> VCP : inserisce nome, descrizione, dataInizio
+PM -> VCP : seleziona Project Manager responsabile
+PM -> VCP : conferma creazione
+VCP -> GPC : creaProgetto(nome, descrizione,\ndataInizio, projectManager)
+
+alt Dati validi e nome univoco
+  create P
+  GPC -> P : crea()
+  P --> GPC : return progettoId
+  GPC -> P : setStato("Attivo")
+  GPC -> P : registraStoricoModifiche()
+  P --> GPC : return ok
+  GPC --> VCP : return {esito: ok, progettoId}
+  VCP -> VDP : redirect -> ViewDettaglioProgetto
+  VDP --> PM : mostra dettaglio progetto creato
+
+else Dati mancanti o non validi
+  GPC --> VCP : return {esito: errore,\nmsg: "Dati non validi"}
+  VCP --> PM : mostra errori di validazione
+
+else Nome progetto già esistente
+  GPC --> VCP : return {esito: errore,\nmsg: "Nome progetto già in uso"}
+  VCP --> PM : mostra errore nome duplicato
+
+else Data inizio antecedente alla data odierna
+  GPC --> VCP : return {esito: errore,\nmsg: "Data inizio non valida"}
+  VCP --> PM : mostra errore data
+end
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml Sequenza_Autenticazione_Utente
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+skinparam sequenceActorBorderColor #2E4057
+
+title Autenticazione Utente
+
+actor Utente
+participant ":ViewLogin" as VL #E8F5E9
+participant ":AutenticazioneController" as AC #E3F2FD
+participant ":SecurityManager" as SM #FFF3E0
+participant ":UtenteRepository" as UD #FCE4EC
+participant ":Utente" as U #F5F8FA
+participant ":GestoreSessione" as SB #FFF3E0
+
+Utente -> VL : inserisce username e password
+VL -> AC : verificaCredenziali(username, password)
+AC -> SM : controlloTentativiFalliti(username)
+
+alt Troppi tentativi falliti
+  SM --> AC : return true (bloccato)
+  AC --> VL : return {esito: bloccato}
+  VL --> Utente : mostra avviso blocco account
+else Account non bloccato
+  SM --> AC : return false
+  AC -> UD : findByUsername(username)
+  UD --> AC : return Utente
+  AC -> SM : verificaPassword(password, hash, salt)
+
+  alt Credenziali valide
+    SM --> AC : return true
+    AC -> U : getRuolo()
+    U --> AC : return ruolo
+    AC -> SB : creaSessione(sessione)
+    SB --> AC : return chiaveSessione
+    AC --> VL : return {esito: ok, ruolo, sessionId}
+
+    alt ruolo = Amministratore
+      VL --> Utente : redirect -> HomeAmministratore
+    else ruolo = ProjectManager
+      VL --> Utente : redirect -> HomeProjectManager
+    else ruolo = Sviluppatore
+      VL --> Utente : redirect -> HomeSviluppatore
+    else ruolo = Tester
+      VL --> Utente : redirect -> HomeTester
+    end
+
+  else Credenziali non valide
+    SM --> AC : return false
+    AC -> U : incrementaTentativiFalliti()
+    AC --> VL : return {esito: errore, msg: "Credenziali errate"}
+    VL --> Utente : mostra messaggio di errore
+  end
+end
+
+@enduml

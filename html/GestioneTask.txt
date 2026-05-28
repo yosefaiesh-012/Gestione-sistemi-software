@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestione Task - Project Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #172033;
+      background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.36), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.32), transparent 36%),
+        radial-gradient(circle at center, rgba(20, 184, 166, 0.14), transparent 44%),
+        linear-gradient(135deg, #020617 0%, #312e81 42%, #78350f 100%);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 245px 1fr;
+      min-height: 100vh;
+      padding: 22px;
+      gap: 22px;
+    }
+
+    .sidebar {
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 22px;
+      color: white;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .menu-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .menu-item {
+      padding: 13px 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .menu-item.active {
+      background: rgba(99, 102, 241, 0.24);
+      color: white;
+      border: 1px solid rgba(165, 180, 252, 0.35);
+    }
+
+    .main {
+      background: rgba(248, 250, 252, 0.94);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 31px;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 7px 0 0;
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .user-box {
+      background: white;
+      border-radius: 18px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 230px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #f59e0b);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .user-name {
+      font-weight: 900;
+      color: #0f172a;
+      font-size: 14px;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .card.green::after {
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .card.orange::after {
+      background: rgba(245, 158, 11, 0.13);
+    }
+
+    .card.red::after {
+      background: rgba(220, 38, 38, 0.12);
+    }
+
+    .card-label {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 9px;
+    }
+
+    .card-value {
+      font-size: 30px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .card-note {
+      margin-top: 8px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .green .card-value {
+      color: #16a34a;
+    }
+
+    .orange .card-value {
+      color: #d97706;
+    }
+
+    .red .card-value {
+      color: #dc2626;
+    }
+
+    .horizontal-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.45fr 0.75fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 19px;
+      color: #0f172a;
+    }
+
+    .panel-subtitle {
+      margin-top: 5px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 12px;
+      color: #334155;
+      font-weight: 900;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #dbe3ef;
+      background: #f8fafc;
+      padding: 11px 13px;
+      border-radius: 13px;
+      color: #0f172a;
+      font-weight: 700;
+      outline: none;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 9px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    th {
+      text-align: left;
+      color: #64748b;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 10px 4px;
+    }
+
+    td {
+      background: #f8fafc;
+      padding: 12px 10px;
+      border-top: 1px solid #eef2f7;
+      border-bottom: 1px solid #eef2f7;
+      font-weight: 650;
+      color: #334155;
+    }
+
+    td:first-child {
+      border-left: 1px solid #eef2f7;
+      border-radius: 13px 0 0 13px;
+      color: #0f172a;
+      font-weight: 900;
+    }
+
+    td:last-child {
+      border-right: 1px solid #eef2f7;
+      border-radius: 0 13px 13px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-blue {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-orange {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-gray {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin-top: 16px;
+    }
+
+    .history-item {
+      background: #f8fafc;
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      padding: 13px;
+      display: flex;
+      gap: 11px;
+    }
+
+    .history-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: #6366f1;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .history-title {
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .history-text {
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .note-panel {
+      background: linear-gradient(135deg, #4f46e5, #d97706);
+      color: white;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 14px 34px rgba(99, 102, 241, 0.24);
+    }
+
+    .note-panel h2 {
+      color: white;
+      margin-bottom: 7px;
+    }
+
+    .note-panel p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .buttons {
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 12px 17px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: #6366f1;
+      color: white;
+      box-shadow: 0 10px 22px rgba(99, 102, 241, 0.25);
+    }
+
+    .btn-orange {
+      background: #f59e0b;
+      color: white;
+      box-shadow: 0 10px 22px rgba(245, 158, 11, 0.22);
+    }
+
+    .btn-green {
+      background: #16a34a;
+      color: white;
+      box-shadow: 0 10px 22px rgba(22, 163, 74, 0.22);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    @media (max-width: 1250px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .horizontal-grid,
+      .bottom-row {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        padding: 12px;
+      }
+
+      .main {
+        padding: 18px;
+      }
+
+      .topbar {
+        flex-direction: column;
+      }
+
+      .cards,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">T</div>
+        <div class="logo-text">
+          Project<br />Monitor
+        </div>
+      </div>
+
+      <div class="menu-title">Gestione task</div>
+      <div class="menu-item active">Task progetto</div>
+      <div class="menu-item">Creazione task</div>
+      <div class="menu-item">Assegnazione</div>
+      <div class="menu-item">Dipendenze</div>
+      <div class="menu-item">Stato attività</div>
+      <div class="menu-item">Storico modifiche</div>
+    </aside>
+
+    <main class="main">
+
+      <section class="topbar">
+        <div>
+          <h1>Gestione Task</h1>
+          <p class="subtitle">
+            Creazione, modifica, assegnazione e aggiornamento dei task collegati al progetto e alle milestone.
+          </p>
+        </div>
+
+        <div class="user-box">
+          <div class="avatar">PM</div>
+          <div>
+            <div class="user-name">Project Manager</div>
+            <div class="user-role">Gestione task</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <div class="card-label">Task totali</div>
+          <div class="card-value">24</div>
+          <div class="card-note">Task registrati nel progetto</div>
+        </article>
+
+        <article class="card green">
+          <div class="card-label">Completati</div>
+          <div class="card-value">16</div>
+          <div class="card-note">Task completati o validati</div>
+        </article>
+
+        <article class="card orange">
+          <div class="card-label">In corso</div>
+          <div class="card-value">5</div>
+          <div class="card-note">Task attualmente lavorati</div>
+        </article>
+
+        <article class="card red">
+          <div class="card-label">In ritardo</div>
+          <div class="card-value">3</div>
+          <div class="card-note">Task con scadenza superata</div>
+        </article>
+      </section>
+
+      <section class="horizontal-grid">
+
+        <section class="panel">
+          <h2>Creazione / modifica task</h2>
+          <div class="panel-subtitle">
+            Il Project Manager definisce dati, assegnatario, priorità, scadenza e dipendenze.
+          </div>
+
+          <form onsubmit="salvaTask(event)">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label for="titolo">Titolo task</label>
+                <input id="titolo" type="text" value="Implementazione login e RBAC" />
+              </div>
+
+              <div class="form-group">
+                <label for="assegnato">Assegnato a</label>
+                <select id="assegnato">
+                  <option>Luca Bianchi</option>
+                  <option>Marco Neri</option>
+                  <option>Giulia Verdi</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="milestone">Milestone</label>
+                <select id="milestone">
+                  <option>M2 - Progettazione</option>
+                  <option>M3 - Implementazione</option>
+                  <option>M4 - Collaudo</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="stato">Stato</label>
+                <select id="stato">
+                  <option>Da fare</option>
+                  <option>In corso</option>
+                  <option>Completato</option>
+                  <option>Validato</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="priorita">Priorità</label>
+                <select id="priorita">
+                  <option>Alta</option>
+                  <option>Media</option>
+                  <option>Bassa</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="scadenza">Scadenza</label>
+                <input id="scadenza" type="date" value="2026-05-18" />
+              </div>
+
+              <div class="form-group">
+                <label for="dipendenza">Dipendenza</label>
+                <select id="dipendenza">
+                  <option>Nessuna</option>
+                  <option>T01 - Analisi requisiti</option>
+                  <option>T03 - Modello dominio</option>
+                </select>
+              </div>
+
+              <div class="form-group full">
+                <label for="descrizione">Descrizione</label>
+                <textarea id="descrizione" rows="4">Implementare autenticazione utente e controllo accessi in base al ruolo.</textarea>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Elenco task</h2>
+          <div class="panel-subtitle">
+            Vista compatta dei task del progetto con stato, priorità e assegnatario.
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Task</th>
+                <th>Assegnato</th>
+                <th>Milestone</th>
+                <th>Stato</th>
+                <th>Priorità</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>T04</td>
+                <td>Implementazione login e RBAC</td>
+                <td>Luca</td>
+                <td>M2</td>
+                <td><span class="badge badge-orange">In corso</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+
+              <tr>
+                <td>T07</td>
+                <td>Dashboard monitoraggio</td>
+                <td>Marco</td>
+                <td>M3</td>
+                <td><span class="badge badge-blue">Da fare</span></td>
+                <td><span class="badge badge-orange">Media</span></td>
+              </tr>
+
+              <tr>
+                <td>T09</td>
+                <td>Repository gestione task</td>
+                <td>Luca</td>
+                <td>M3</td>
+                <td><span class="badge badge-orange">In corso</span></td>
+                <td><span class="badge badge-orange">Media</span></td>
+              </tr>
+
+              <tr>
+                <td>T12</td>
+                <td>Storico modifiche task</td>
+                <td>Giulia</td>
+                <td>M3</td>
+                <td><span class="badge badge-green">Completato</span></td>
+                <td><span class="badge badge-gray">Bassa</span></td>
+              </tr>
+
+              <tr>
+                <td>T15</td>
+                <td>Validazione finale</td>
+                <td>Giulia</td>
+                <td>M4</td>
+                <td><span class="badge badge-blue">Da fare</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside class="panel">
+          <h2>Storico task</h2>
+          <div class="panel-subtitle">
+            Ultime modifiche registrate sui task.
+          </div>
+
+          <div class="history-list">
+            <div class="history-item">
+              <div class="history-icon">1</div>
+              <div>
+                <div class="history-title">T04 aggiornato</div>
+                <div class="history-text">Stato modificato da Da fare a In corso.</div>
+              </div>
+            </div>
+
+            <div class="history-item">
+              <div class="history-icon" style="background:#f59e0b;">2</div>
+              <div>
+                <div class="history-title">T07 assegnato</div>
+                <div class="history-text">Task assegnato allo sviluppatore Marco.</div>
+              </div>
+            </div>
+
+            <div class="history-item">
+              <div class="history-icon" style="background:#16a34a;">3</div>
+              <div>
+                <div class="history-title">T12 completato</div>
+                <div class="history-text">Task completato e pronto per validazione.</div>
+              </div>
+            </div>
+
+            <div class="history-item">
+              <div class="history-icon" style="background:#dc2626;">!</div>
+              <div>
+                <div class="history-title">Dipendenza non valida</div>
+                <div class="history-text">Impossibile collegare task a dipendenza incoerente.</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </section>
+
+      <section class="bottom-row">
+        <div class="note-panel">
+          <h2>Regole sui task</h2>
+          <p>
+            Un task può essere creato o modificato dal Project Manager. Lo Sviluppatore può aggiornare solo
+            lo stato dei task assegnati. Le dipendenze devono essere coerenti e non possono creare cicli.
+          </p>
+        </div>
+
+        <div class="buttons">
+          <button class="btn-primary" onclick="salvaManuale()">Salva task</button>
+          <button class="btn-orange" onclick="assegnaTask()">Assegna sviluppatore</button>
+          <button class="btn-green" onclick="completaTask()">Segna completato</button>
+          <button class="btn-secondary" onclick="annulla()">Annulla</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    function salvaTask(event) {
+      event.preventDefault();
+      alert("Task salvato correttamente.");
+    }
+
+    function salvaManuale() {
+      const titolo = document.getElementById("titolo").value.trim();
+
+      if (titolo === "") {
+        alert("Errore: il titolo del task è obbligatorio.");
+        return;
+      }
+
+      alert("Task salvato correttamente.");
+    }
+
+    function assegnaTask() {
+      const assegnato = document.getElementById("assegnato").value;
+      alert("Task assegnato a: " + assegnato);
+    }
+
+    function completaTask() {
+      document.getElementById("stato").value = "Completato";
+      alert("Stato aggiornato a Completato.");
+    }
+
+    function annulla() {
+      alert("Operazione annullata.");
+    }
+  </script>
+</body>
+</html>

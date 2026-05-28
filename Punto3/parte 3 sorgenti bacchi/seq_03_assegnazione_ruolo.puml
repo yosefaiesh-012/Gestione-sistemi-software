@@ -1,0 +1,49 @@
+@startuml Sequenza_Assegnazione_Ruolo
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Assegnazione Ruolo Utente
+
+actor Amministratore as Admin
+participant ":HomeAmministratore" as HA #E8F5E9
+participant ":ViewDettaglioUtente" as VDU #E8F5E9
+participant ":ViewModificaUtente" as VMU #E8F5E9
+participant ":GestioneUtentiController" as GUC #E3F2FD
+participant ":Utente" as U #F5F8FA
+
+Admin -> HA : accede alla gestione utenti
+HA -> GUC : mostraElencoUtenti()
+GUC --> HA : return lista utenti registrati
+Admin -> HA : seleziona un utente
+HA -> VDU : mostra ViewDettaglioUtente
+Admin -> VDU : sceglie "Modifica Ruolo"
+VDU -> VMU : mostra ViewModificaUtente\ncon ruolo attuale
+Admin -> VMU : seleziona nuovo ruolo
+VMU -> GUC : assegnaRuolo(userId, nuovoRuolo)
+GUC -> U : getRuolo()
+U --> GUC : return ruoloAttuale
+
+alt Ruolo valido e diverso da quello attuale
+  GUC -> U : setRuolo(nuovoRuolo)
+  GUC -> U : registraStoricoModifiche()
+  U --> GUC : ok
+  GUC --> VMU : return {esito: ok}
+  VMU --> Admin : ruolo aggiornato correttamente
+  VMU -> VDU : redirect -> ViewDettaglioUtente
+
+else Ruolo non valido
+  GUC --> VMU : return {esito: errore,\nmsg: "Ruolo non valido"}
+  VMU --> Admin : mostra errore
+
+else Ruolo uguale a quello attuale
+  GUC --> VMU : return {esito: errore,\nmsg: "Ruolo già assegnato"}
+  VMU --> Admin : mostra avviso
+
+else Utente inesistente
+  GUC --> VMU : return {esito: errore,\nmsg: "Utente non trovato"}
+  VMU --> Admin : mostra errore
+end
+
+@enduml

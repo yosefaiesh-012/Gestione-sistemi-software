@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home Amministratore - Project Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #172033;
+      background:
+        radial-gradient(circle at top left, rgba(239, 68, 68, 0.32), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.38), transparent 36%),
+        radial-gradient(circle at center, rgba(148, 163, 184, 0.14), transparent 45%),
+        linear-gradient(135deg, #020617 0%, #111827 42%, #1e1b4b 100%);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .sidebar {
+      background: rgba(15, 23, 42, 0.84);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 24px;
+      color: white;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 34px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dc2626, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .menu-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .menu-item {
+      padding: 13px 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .menu-item.active {
+      background: rgba(220, 38, 38, 0.22);
+      color: white;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+    }
+
+    .menu-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .main {
+      background: rgba(248, 250, 252, 0.93);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+    }
+
+    .title-block p {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 18px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+      min-width: 230px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dc2626, #2563eb);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .user-name {
+      font-weight: 900;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .card.red::after {
+      background: rgba(220, 38, 38, 0.12);
+    }
+
+    .card.green::after {
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .card.orange::after {
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    .card-label {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 12px;
+    }
+
+    .card-value {
+      font-size: 34px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .card-note {
+      margin-top: 10px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .red .card-value {
+      color: #dc2626;
+    }
+
+    .green .card-value {
+      color: #16a34a;
+    }
+
+    .orange .card-value {
+      color: #d97706;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .search-box {
+      flex: 1;
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 1px solid #dbe3ef;
+      background: #f8fafc;
+      padding: 13px 15px;
+      border-radius: 14px;
+      color: #0f172a;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #dc2626;
+      color: white;
+      box-shadow: 0 10px 22px rgba(220, 38, 38, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #b91c1c;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #0f172a;
+    }
+
+    .panel-subtitle {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 12px 6px;
+    }
+
+    td {
+      background: #f8fafc;
+      padding: 14px 12px;
+      border-top: 1px solid #eef2f7;
+      border-bottom: 1px solid #eef2f7;
+      font-weight: 650;
+      color: #334155;
+    }
+
+    td:first-child {
+      border-left: 1px solid #eef2f7;
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+      color: #0f172a;
+      font-weight: 900;
+    }
+
+    td:last-child {
+      border-right: 1px solid #eef2f7;
+      border-top-right-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .badge-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-blue {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-gray {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .role-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .role-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #eef2f7;
+    }
+
+    .role-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .icon-red {
+      background: #dc2626;
+    }
+
+    .icon-blue {
+      background: #2563eb;
+    }
+
+    .icon-green {
+      background: #16a34a;
+    }
+
+    .icon-orange {
+      background: #f59e0b;
+    }
+
+    .role-title {
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .role-text {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .security-panel {
+      margin-top: 22px;
+      background: linear-gradient(135deg, #991b1b, #1d4ed8);
+      color: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 16px 38px rgba(37, 99, 235, 0.25);
+    }
+
+    .security-panel h2 {
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .security-panel p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1150px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        padding: 12px;
+      }
+
+      .main {
+        padding: 18px;
+      }
+
+      .topbar,
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">A</div>
+        <div class="logo-text">
+          Project<br />Monitor
+        </div>
+      </div>
+
+      <div class="menu-title">Area amministratore</div>
+      <div class="menu-item active">Dashboard utenti</div>
+      <div class="menu-item">Gestione utenti</div>
+      <div class="menu-item">Assegnazione ruoli</div>
+      <div class="menu-item">Account sospesi</div>
+      <div class="menu-item">Storico operazioni</div>
+      <div class="menu-item">Impostazioni sicurezza</div>
+    </aside>
+
+    <main class="main">
+
+      <section class="topbar">
+        <div class="title-block">
+          <h1>Home Amministratore</h1>
+          <p>
+            Gestione degli utenti registrati, controllo degli account e assegnazione dei ruoli autorizzati.
+          </p>
+        </div>
+
+        <div class="user-box">
+          <div class="avatar">AD</div>
+          <div>
+            <div class="user-name">Amministratore</div>
+            <div class="user-role">Accesso autorizzato</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <div class="card-label">Utenti totali</div>
+          <div class="card-value">18</div>
+          <div class="card-note">Account registrati nel sistema</div>
+        </article>
+
+        <article class="card green">
+          <div class="card-label">Account attivi</div>
+          <div class="card-value">15</div>
+          <div class="card-note">Utenti abilitati all'accesso</div>
+        </article>
+
+        <article class="card red">
+          <div class="card-label">Account bloccati</div>
+          <div class="card-value">2</div>
+          <div class="card-note">Accesso temporaneamente negato</div>
+        </article>
+
+        <article class="card orange">
+          <div class="card-label">Ruoli modificati</div>
+          <div class="card-value">4</div>
+          <div class="card-note">Operazioni recenti sui permessi</div>
+        </article>
+      </section>
+
+      <section class="toolbar">
+        <div class="search-box">
+          <input type="text" placeholder="Cerca utente per nome, username o email..." />
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="btn-primary" onclick="creaUtente()">Nuovo utente</button>
+          <button class="btn-secondary" onclick="aggiornaElenco()">Aggiorna elenco</button>
+        </div>
+      </section>
+
+      <section class="content-grid">
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Elenco utenti registrati</h2>
+              <div class="panel-subtitle">
+                L'amministratore può creare, modificare, eliminare utenti e assegnare ruoli.
+              </div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Ruolo</th>
+                <th>Stato</th>
+                <th>Operazione</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>U01</td>
+                <td>admin</td>
+                <td>Admin Sistema</td>
+                <td>admin@projectmonitor.it</td>
+                <td><span class="badge badge-red">Amministratore</span></td>
+                <td><span class="badge badge-green">Attivo</span></td>
+                <td><button class="btn-secondary" onclick="modificaUtente('admin')">Modifica</button></td>
+              </tr>
+
+              <tr>
+                <td>U02</td>
+                <td>mario.rossi</td>
+                <td>Mario Rossi</td>
+                <td>mario.rossi@email.it</td>
+                <td><span class="badge badge-blue">Project Manager</span></td>
+                <td><span class="badge badge-green">Attivo</span></td>
+                <td><button class="btn-secondary" onclick="modificaUtente('mario.rossi')">Modifica</button></td>
+              </tr>
+
+              <tr>
+                <td>U03</td>
+                <td>luca.bianchi</td>
+                <td>Luca Bianchi</td>
+                <td>luca.bianchi@email.it</td>
+                <td><span class="badge badge-gray">Sviluppatore</span></td>
+                <td><span class="badge badge-green">Attivo</span></td>
+                <td><button class="btn-secondary" onclick="modificaUtente('luca.bianchi')">Modifica</button></td>
+              </tr>
+
+              <tr>
+                <td>U04</td>
+                <td>giulia.verdi</td>
+                <td>Giulia Verdi</td>
+                <td>giulia.verdi@email.it</td>
+                <td><span class="badge badge-orange">Tester</span></td>
+                <td><span class="badge badge-green">Attivo</span></td>
+                <td><button class="btn-secondary" onclick="modificaUtente('giulia.verdi')">Modifica</button></td>
+              </tr>
+
+              <tr>
+                <td>U05</td>
+                <td>utente.sospeso</td>
+                <td>Utente Sospeso</td>
+                <td>sospeso@email.it</td>
+                <td><span class="badge badge-gray">Sviluppatore</span></td>
+                <td><span class="badge badge-red">Bloccato</span></td>
+                <td><button class="btn-secondary" onclick="modificaUtente('utente.sospeso')">Modifica</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside>
+          <section class="panel">
+            <h2>Riepilogo ruoli</h2>
+            <div class="panel-subtitle">
+              Distribuzione dei ruoli principali nel sistema.
+            </div>
+
+            <div class="role-list" style="margin-top: 18px;">
+              <div class="role-item">
+                <div class="role-icon icon-red">A</div>
+                <div>
+                  <div class="role-title">Amministratori</div>
+                  <div class="role-text">2 utenti con gestione completa degli account.</div>
+                </div>
+              </div>
+
+              <div class="role-item">
+                <div class="role-icon icon-blue">PM</div>
+                <div>
+                  <div class="role-title">Project Manager</div>
+                  <div class="role-text">4 utenti abilitati alla gestione dei progetti.</div>
+                </div>
+              </div>
+
+              <div class="role-item">
+                <div class="role-icon icon-green">S</div>
+                <div>
+                  <div class="role-title">Sviluppatori</div>
+                  <div class="role-text">8 utenti assegnabili a task e bug.</div>
+                </div>
+              </div>
+
+              <div class="role-item">
+                <div class="role-icon icon-orange">T</div>
+                <div>
+                  <div class="role-title">Tester</div>
+                  <div class="role-text">4 utenti abilitati al controllo qualità.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="security-panel">
+            <h2>Controllo accessi</h2>
+            <p>
+              Ogni utente accede esclusivamente alle funzionalità previste dal proprio ruolo.
+              Le operazioni di creazione, modifica, eliminazione e assegnazione dei ruoli sono riservate all'amministratore.
+            </p>
+          </section>
+        </aside>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function creaUtente() {
+      alert("Apertura schermata: modificaUtente.html per la creazione di un nuovo utente.");
+    }
+
+    function modificaUtente(username) {
+      alert("Apertura schermata modifica utente: " + username);
+    }
+
+    function aggiornaElenco() {
+      alert("Elenco utenti aggiornato correttamente.");
+    }
+  </script>
+</body>
+</html>

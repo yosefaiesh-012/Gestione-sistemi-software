@@ -1,0 +1,83 @@
+@startuml Sequenza_Controllo_Qualita
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Controllo Qualità - Validazione Task e Verifica Bug
+
+actor Tester
+participant ":HomeTester" as HT #E8F5E9
+participant ":ViewValidazioneTask" as VVT #E8F5E9
+participant ":ViewVerificaBug" as VVB #E8F5E9
+participant ":ControlloQualitaController" as CQC #E3F2FD
+participant ":GestioneTaskDevController" as GTDC #E3F2FD
+participant ":GestioneBugTesterController" as GBTC #E3F2FD
+participant ":Task" as T #F5F8FA
+participant ":Bug" as B #F5F8FA
+
+== Validazione Task ==
+
+Tester -> HT : accede alla sezione Controllo Qualità
+HT -> CQC : mostraTaskDaValidare()
+CQC --> HT : return lista task in stato "Completato"
+Tester -> HT : seleziona un task
+HT -> VVT : mostra ViewValidazioneTask
+Tester -> VVT : esamina il task ed esprime esito
+
+alt Validazione positiva
+  VVT -> CQC : validaTask(taskId)
+  CQC -> GTDC : aggiornaStato(taskId, "Validato")
+  GTDC -> T : setStato("Validato")
+  T -> T : registraStoricoModifiche()
+  T --> GTDC : ok
+  CQC -> CQC : registraStoricoVerifiche()
+  CQC --> VVT : return {esito: ok}
+  VVT --> Tester : task validato con successo
+
+else Rifiuto / Riapertura
+  VVT -> CQC : rifiutaTask(taskId, motivazione)
+  CQC -> GTDC : aggiornaStato(taskId, "Da Fare")
+  GTDC -> T : setStato("Da Fare")
+  T -> T : registraStoricoModifiche()
+  T --> GTDC : ok
+  CQC -> CQC : registraStoricoVerifiche()
+  CQC --> VVT : return {esito: ok}
+  VVT --> Tester : task riaperto
+
+else Task non nello stato corretto
+  CQC --> VVT : return {esito: errore,\nmsg: "Operazione non consentita"}
+  VVT --> Tester : mostra errore
+end
+
+== Verifica Bug ==
+
+Tester -> HT : accede ai bug da verificare
+HT -> GBTC : mostraBugDaVerificare()
+GBTC --> HT : return lista bug in stato "Risolto"
+Tester -> HT : seleziona un bug
+HT -> VVB : mostra ViewVerificaBug
+Tester -> VVB : esamina il bug ed esprime esito
+
+alt Bug correttamente risolto
+  VVB -> CQC : verificaBug(bugId)
+  CQC -> GBTC : aggiornaStato(bugId, "Chiuso")
+  GBTC -> B : setStato("Chiuso")
+  B -> B : registraStoricoModifiche()
+  B --> GBTC : ok
+  CQC -> CQC : registraStoricoVerifiche()
+  CQC --> VVB : return {esito: ok}
+  VVB --> Tester : bug chiuso con successo
+
+else Bug non risolto correttamente
+  VVB -> CQC : riapriBug(bugId, motivazione)
+  CQC -> GBTC : aggiornaStato(bugId, "Aperto")
+  GBTC -> B : setStato("Aperto")
+  B -> B : registraStoricoModifiche()
+  B --> GBTC : ok
+  CQC -> CQC : registraStoricoVerifiche()
+  CQC --> VVB : return {esito: ok}
+  VVB --> Tester : bug riaperto
+end
+
+@enduml

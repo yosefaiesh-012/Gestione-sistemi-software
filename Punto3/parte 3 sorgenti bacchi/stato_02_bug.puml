@@ -1,0 +1,41 @@
+@startuml Diagramma_Stato_Bug
+!theme plain
+skinparam StateBackgroundColor #F5F8FA
+skinparam StateBorderColor #4A7C9B
+skinparam StateArrowColor #4A7C9B
+skinparam StateFontSize 13
+
+title Diagramma di Stato - Bug
+
+[*] --> Aperto : segnalaBug() [Sviluppatore]
+
+state Aperto #FFCDD2 {
+  Aperto : Bug appena segnalato
+  Aperto : o riaperto
+}
+
+state InLavorazione #FFF3E0 {
+  InLavorazione : Bug assegnato
+  InLavorazione : a uno sviluppatore
+}
+
+state Risolto #DCEDC8 {
+  Risolto : Correzione completata
+  Risolto : In attesa di verifica
+}
+
+state Chiuso #C8E6C9 {
+  Chiuso : Verifica positiva
+  Chiuso : Stato finale
+}
+
+Aperto --> InLavorazione : assegnaBug(sviluppatoreId)\n[Tester, sviluppatore valido]
+InLavorazione --> Risolto : aggiornaStato(RISOLTO)\n[Sviluppatore assegnato]
+Risolto --> Chiuso : verificaBug()\n[Tester, verifica positiva]
+Risolto --> Aperto : riapriBug(motivazione)\n[Tester, bug non corretto]
+Aperto --> Aperto : modificaBug(dati)\n[Sviluppatore, bug in stato Aperto]
+
+Chiuso --> [*]
+
+
+@enduml
