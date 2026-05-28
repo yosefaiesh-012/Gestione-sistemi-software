@@ -1,0 +1,30 @@
+@startuml Sequenza_Dashboard
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Monitoraggio Progetto - Dashboard
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM #E8F5E9
+participant ":ViewDashboardProgetto" as VDP #E8F5E9
+participant ":MonitoraggioController" as MC #E3F2FD
+
+PM -> HPM : seleziona un progetto
+HPM -> VDP : redirect -> ViewDashboardProgetto
+PM -> VDP : accede alla dashboard
+VDP -> MC : mostraAvanzamento(progettoId)
+MC --> VDP : return {avanzamento%,\ntaskPerStato, taskInRitardo,\nmilestone, bugAperti}
+
+alt Progetto con dati completi
+  VDP --> PM : visualizza panoramica completa
+
+else Progetto senza task
+  VDP --> PM : dashboard con dati parziali
+
+else Progetto sospeso
+  VDP --> PM : dashboard in sola lettura
+end
+
+@enduml

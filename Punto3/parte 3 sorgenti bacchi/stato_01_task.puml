@@ -1,0 +1,52 @@
+@startuml Diagramma_Stato_Task
+!theme plain
+skinparam StateBackgroundColor #F5F8FA
+skinparam StateBorderColor #4A7C9B
+skinparam StateArrowColor #4A7C9B
+skinparam StateFontSize 13
+
+title Diagramma di Stato - Task
+
+[*] --> Creato : creaTask() [PM]
+
+state Creato #E3F2FD {
+  Creato : Task appena creato
+  Creato : Non ancora assegnato
+}
+
+state Assegnato #FFF3E0 {
+  Assegnato : Task assegnato a
+  Assegnato : uno sviluppatore
+}
+
+state InCorso #E8F5E9 {
+  InCorso : Lo sviluppatore sta
+  InCorso : lavorando al task
+}
+
+state Completato #DCEDC8 {
+  Completato : Lavoro terminato
+  Completato : In attesa di validazione
+}
+
+state Validato #C8E6C9 {
+  Validato : Il Tester ha approvato
+  Validato : Stato finale positivo
+}
+
+state Rifiutato #FFCDD2 {
+  Rifiutato : Il Tester ha rifiutato
+  Rifiutato : Torna a Da Fare
+}
+
+Creato --> Assegnato : assegnaTask(sviluppatoreId)\n[PM, sviluppatore valido]
+Assegnato --> InCorso : aggiornaStato(IN_CORSO)\n[Sviluppatore assegnato]
+InCorso --> Completato : segnalaCompletamento()\n[Nessuna dipendenza bloccante]
+Completato --> Validato : validaTask()\n[Tester]
+Completato --> Rifiutato : rifiutaTask(motivazione)\n[Tester]
+Rifiutato --> InCorso : aggiornaStato(IN_CORSO)\n[Sviluppatore riprende]
+Assegnato --> Assegnato : riassegnaTask(nuovoSvil)\n[PM, nuovo sviluppatore diverso]
+
+Validato --> [*]
+
+@enduml

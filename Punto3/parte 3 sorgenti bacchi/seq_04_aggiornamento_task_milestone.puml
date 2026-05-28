@@ -1,0 +1,62 @@
+@startuml Sequenza_Aggiornamento_Task_Milestone
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Aggiornamento Stato Task e Propagazione a Milestone
+
+actor Sviluppatore as Dev
+participant ":HomeSviluppatore" as HS #E8F5E9
+participant ":ViewModificaTask" as VMT #E8F5E9
+participant ":GestioneTaskDevController" as GTDC #E3F2FD
+participant ":GestioneMilestoneController" as GMC #E3F2FD
+participant ":MonitoraggioController" as MC #E3F2FD
+participant ":Task" as T #F5F8FA
+participant ":Milestone" as M #F5F8FA
+
+Dev -> HS : seleziona task assegnato
+HS -> GTDC : getElencoTaskAssegnati()
+GTDC --> HS : return lista<Task>
+Dev -> HS : apre il task
+HS -> VMT : mostra ViewModificaTask
+Dev -> VMT : aggiorna stato (es. "Completato")
+VMT -> GTDC : aggiornaStato(taskId, nuovoStato)
+
+GTDC -> T : isInRitardo()
+T --> GTDC : return boolean
+GTDC -> T : setStato(nuovoStato)
+GTDC -> T : registraStoricoModifiche()
+T --> GTDC : ok
+GTDC --> VMT : return {esito: ok}
+
+== Evento automatico: Aggiornamento Stato Task ==
+
+GTDC -> GMC : aggiornaStatoMilestone(milestoneId)
+GMC -> GMC : calcolaStato()
+GMC -> M : controllaStatoTaskAssociati()
+M --> GMC : return stato
+
+alt Tutti i task completati o validati
+  GMC -> M : setStato("Completata")
+  M --> GMC : ok
+  GMC --> GTDC : milestone aggiornata
+
+else Task ancora in corso
+  GMC -> M : setStato("In Corso")
+  M --> GMC : ok
+  GMC --> GTDC : milestone aggiornata
+
+else Nessun task associato
+  GMC --> GTDC : nessun aggiornamento
+  note right : milestone invariata
+end
+
+GTDC -> MC : calcolaAvanzamento(progettoId)
+MC -> T : getTaskInRitardo()
+T --> MC : return lista
+MC --> GTDC : avanzamento aggiornato
+
+VMT --> Dev : mostra conferma aggiornamento
+
+@enduml

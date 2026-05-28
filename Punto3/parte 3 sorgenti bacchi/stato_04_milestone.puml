@@ -1,0 +1,35 @@
+@startuml Diagramma_Stato_Milestone
+!theme plain
+skinparam StateBackgroundColor #F5F8FA
+skinparam StateBorderColor #4A7C9B
+skinparam StateArrowColor #4A7C9B
+skinparam StateFontSize 13
+
+title Diagramma di Stato - Milestone
+
+[*] --> Pianificata : creaMilestone() [PM]
+
+state Pianificata #E3F2FD {
+  Pianificata : Milestone appena creata
+  Pianificata : Nessun task ancora in lavorazione
+}
+
+state InCorso #FFF3E0 {
+  InCorso : Almeno un task associato
+  InCorso : è in lavorazione
+}
+
+state Completata #C8E6C9 {
+  Completata : Tutti i task associati
+  Completata : completati o validati
+}
+
+Pianificata --> InCorso : aggiornaStatoMilestone()\n[automatico]\n[almeno un task in corso/completato]
+InCorso --> Completata : aggiornaStatoMilestone()\n[automatico]\n[tutti i task completati o validati]
+Completata --> InCorso : aggiornaStatoMilestone()\n[automatico]\n[un task rifiutato torna in lavorazione]
+Pianificata --> Pianificata : associaTask(task)\n[nessun task in corso]
+
+Completata --> [*]
+
+
+@enduml

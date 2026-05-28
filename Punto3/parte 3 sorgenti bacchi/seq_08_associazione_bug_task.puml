@@ -1,0 +1,50 @@
+@startuml Sequenza_Associazione_Bug_Task
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Associazione Bug a Task
+
+actor Sviluppatore as Dev
+participant ":HomeSviluppatore" as HS #E8F5E9
+participant ":ViewDettaglioBug" as VDB #E8F5E9
+participant ":ViewModificaBug" as VMB #E8F5E9
+participant ":GestioneBugDevController" as GBDC #E3F2FD
+participant ":Bug" as B #F5F8FA
+participant ":Task" as T #F5F8FA
+
+Dev -> HS : seleziona un bug in stato Aperto
+HS -> GBDC : getElencoBugAssegnati()
+GBDC --> HS : return lista bug
+Dev -> HS : apre il bug
+HS -> VDB : mostra ViewDettaglioBug
+Dev -> VDB : sceglie "Associa a Task"
+VDB -> VMB : mostra ViewModificaBug\ncon elenco task del progetto
+Dev -> VMB : seleziona il task da associare
+VMB -> GBDC : associaBugTask(bugId, taskId)
+GBDC -> T : getDettaglioTask(taskId)
+T --> GBDC : return task
+
+alt Task esistente e appartenente al progetto
+  GBDC -> B : associaBugTask(taskId)
+  GBDC -> B : registraStoricoModifiche()
+  B --> GBDC : ok
+  GBDC --> VMB : return {esito: ok}
+  VMB --> Dev : associazione registrata correttamente
+  VMB -> VDB : redirect -> ViewDettaglioBug
+
+else Task inesistente
+  GBDC --> VMB : return {esito: errore,\nmsg: "Task non trovato"}
+  VMB --> Dev : mostra errore
+
+else Task non appartenente al progetto del bug
+  GBDC --> VMB : return {esito: errore,\nmsg: "Task non appartenente al progetto"}
+  VMB --> Dev : mostra errore
+
+else Bug già associato a un task
+  GBDC --> VMB : return {esito: warning,\nmsg: "Bug già associato a un task,\nconfermare sostituzione"}
+  VMB --> Dev : mostra avviso e chiede conferma
+end
+
+@enduml

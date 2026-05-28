@@ -1,0 +1,41 @@
+@startuml Diagramma_Stato_Progetto
+!theme plain
+skinparam StateBackgroundColor #F5F8FA
+skinparam StateBorderColor #4A7C9B
+skinparam StateArrowColor #4A7C9B
+skinparam StateFontSize 13
+
+title Diagramma di Stato - Progetto
+
+[*] --> Attivo : creaProgetto() [PM]
+
+state Attivo #E3F2FD {
+  Attivo : Progetto operativo
+  Attivo : Tutte le funzionalità disponibili
+}
+
+state Sospeso #FFF3E0 {
+  Sospeso : Progetto temporaneamente
+  Sospeso : bloccato
+}
+
+state Chiuso #DCEDC8 {
+  Chiuso : Progetto concluso
+  Chiuso : Nessuna modifica possibile
+}
+
+state Archiviato #E0E0E0 {
+  Archiviato : Consultazione storica
+  Archiviato : Solo lettura
+}
+
+Attivo --> Sospeso : sospendiProgetto()\n[PM, progetto attivo]
+Sospeso --> Attivo : riattivaProgetto()\n[PM, progetto sospeso]
+Attivo --> Chiuso : chiudiProgetto()\n[PM, tutti task completati/validati\nE tutti bug chiusi]
+Chiuso --> Archiviato : archiviaProgetto()\n[PM, progetto chiuso]
+Attivo --> Attivo : modificaProgetto(dati)\n[PM, progetto attivo]
+
+Archiviato --> [*]
+
+
+@enduml

@@ -1,0 +1,107 @@
+@startuml Sequenza_Gestione_Progetto_Completa
+!theme plain
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #4A7C9B
+skinparam sequenceLifeLineBorderColor #4A7C9B
+
+title Gestione Progetto - Creazione, Modifica, Sospensione, Chiusura e Archiviazione
+
+actor "Project Manager" as PM
+participant ":HomeProjectManager" as HPM #E8F5E9
+participant ":ViewCreazioneProgetto" as VCP #E8F5E9
+participant ":ViewDettaglioProgetto" as VDP #E8F5E9
+participant ":ViewModificaProgetto" as VMP #E8F5E9
+participant ":ViewArchivioProgetti" as VAP #E8F5E9
+participant ":GestioneProgettoController" as GPC #E3F2FD
+participant ":Progetto" as P #F5F8FA
+
+== Creazione Progetto ==
+
+PM -> HPM : sceglie "Crea nuovo Progetto"
+HPM -> VCP : mostra ViewCreazioneProgetto
+PM -> VCP : inserisce nome, descrizione,\ndataInizio, projectManager
+VCP -> GPC : creaProgetto(nome, descrizione,\ndataInizio, projectManager)
+
+alt Dati validi e nome univoco
+  create P
+  GPC -> P : crea()
+  P --> GPC : return progettoId
+  GPC --> VCP : return {esito: ok, progettoId}
+  VCP -> VDP : redirect -> ViewDettaglioProgetto
+  VDP --> PM : mostra dettaglio progetto
+else Dati mancanti o non validi
+  GPC --> VCP : return {esito: errore, msg: "Dati non validi"}
+  VCP --> PM : mostra errori di validazione
+else Nome progetto già esistente
+  GPC --> VCP : return {esito: errore, msg: "Nome progetto già in uso"}
+  VCP --> PM : mostra errore nome duplicato
+end
+
+== Modifica e Sospensione Progetto ==
+
+PM -> VDP : seleziona un progetto attivo
+PM -> VDP : sceglie "Modifica Progetto"
+VDP -> VMP : mostra ViewModificaProgetto
+PM -> VMP : aggiorna i dati del progetto
+VMP -> GPC : modificaProgetto(progettoId, datiAggiornati)
+
+alt Dati validi
+  GPC -> P : modificaProgetto()
+  GPC -> P : registraStoricoModifiche()
+  P --> GPC : ok
+  GPC --> VMP : return {esito: ok}
+  VMP --> PM : modifiche salvate
+else Dati non validi
+  GPC --> VMP : return {esito: errore, msg: "Dati non validi"}
+  VMP --> PM : mostra errori di validazione
+end
+
+PM -> VDP : sceglie "Sospendi Progetto"
+VDP -> GPC : sospendiProgetto(progettoId)
+
+alt Progetto attivo
+  GPC -> P : setStato("Sospeso")
+  GPC -> P : registraStoricoModifiche()
+  P --> GPC : ok
+  GPC --> VDP : return {esito: ok}
+  VDP --> PM : progetto sospeso,\noperazioni operative bloccate
+else Progetto già chiuso o archiviato
+  GPC --> VDP : return {esito: errore,\nmsg: "Operazione non consentita"}
+  VDP --> PM : mostra errore
+end
+
+== Chiusura e Archiviazione Progetto ==
+
+PM -> VDP : sceglie "Chiudi Progetto"
+VDP -> GPC : chiudiProgetto(progettoId)
+
+alt Tutti i task e bug completati o chiusi
+  GPC -> P : setStato("Chiuso")
+  GPC -> P : registraStoricoModifiche()
+  P --> GPC : ok
+  GPC --> VDP : return {esito: ok}
+  VDP --> PM : progetto chiuso correttamente
+else Task o bug ancora aperti
+  GPC --> VDP : return {esito: errore,\nmsg: "Task o bug ancora aperti"}
+  VDP --> PM : mostra errore con elenco\nelementi pendenti
+else Progetto sospeso
+  GPC --> VDP : return {esito: errore,\nmsg: "Riattivare il progetto\nprima di chiuderlo"}
+  VDP --> PM : mostra errore
+end
+
+PM -> VDP : sceglie "Archivia Progetto"
+VDP -> GPC : archiviaProgetto(progettoId)
+
+alt Progetto in stato Chiuso
+  GPC -> P : setStato("Archiviato")
+  GPC -> P : registraStoricoModifiche()
+  P --> GPC : ok
+  GPC --> VDP : return {esito: ok}
+  VDP -> VAP : redirect -> ViewArchivioProgetti
+  VAP --> PM : mostra archivio progetti
+else Progetto non ancora chiuso
+  GPC --> VDP : return {esito: errore,\nmsg: "Archiviare solo progetti chiusi"}
+  VDP --> PM : mostra errore
+end
+
+@enduml
