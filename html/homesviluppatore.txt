@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home Sviluppatore - Project Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #172033;
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.35), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.38), transparent 36%),
+        radial-gradient(circle at center, rgba(20, 184, 166, 0.14), transparent 44%),
+        linear-gradient(135deg, #020617 0%, #052e2b 45%, #312e81 100%);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .sidebar {
+      background: rgba(15, 23, 42, 0.84);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 24px;
+      color: white;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 34px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #16a34a, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .menu-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .menu-item {
+      padding: 13px 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .menu-item.active {
+      background: rgba(34, 197, 94, 0.20);
+      color: white;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+    }
+
+    .menu-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .main {
+      background: rgba(248, 250, 252, 0.93);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+    }
+
+    .title-block p {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 18px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+      min-width: 230px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #16a34a, #6366f1);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .user-name {
+      font-weight: 900;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .work-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      background: white;
+      padding: 18px;
+      border-radius: 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .project-select label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 900;
+      margin-right: 10px;
+    }
+
+    select {
+      border: 1px solid #dbe3ef;
+      background: #f8fafc;
+      padding: 11px 14px;
+      border-radius: 12px;
+      color: #0f172a;
+      font-weight: 800;
+      min-width: 320px;
+      outline: none;
+    }
+
+    .status-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 9px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .pill-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill-blue {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .pill-orange {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.10);
+    }
+
+    .card.blue::after {
+      background: rgba(37, 99, 235, 0.10);
+    }
+
+    .card.orange::after {
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    .card.red::after {
+      background: rgba(220, 38, 38, 0.12);
+    }
+
+    .card-label {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 12px;
+    }
+
+    .card-value {
+      font-size: 34px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .card-note {
+      margin-top: 10px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .blue .card-value {
+      color: #2563eb;
+    }
+
+    .orange .card-value {
+      color: #d97706;
+    }
+
+    .red .card-value {
+      color: #dc2626;
+    }
+
+    .green-value {
+      color: #16a34a;
+    }
+
+    .focus-panel {
+      background: linear-gradient(135deg, #15803d, #4f46e5);
+      color: white;
+      border-radius: 26px;
+      padding: 24px;
+      margin-bottom: 22px;
+      box-shadow: 0 16px 38px rgba(34, 197, 94, 0.25);
+    }
+
+    .focus-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .focus-top strong {
+      font-size: 18px;
+    }
+
+    .focus-percent {
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .progress-track {
+      height: 16px;
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 72%;
+      background: white;
+      border-radius: 999px;
+    }
+
+    .focus-caption {
+      margin-top: 12px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .action-card {
+      border: none;
+      text-align: left;
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.13);
+    }
+
+    .action-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .icon-green {
+      background: #16a34a;
+    }
+
+    .icon-blue {
+      background: #2563eb;
+    }
+
+    .icon-orange {
+      background: #f59e0b;
+    }
+
+    .action-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .action-text {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #0f172a;
+    }
+
+    .panel-subtitle {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 12px 6px;
+    }
+
+    td {
+      background: #f8fafc;
+      padding: 14px 12px;
+      border-top: 1px solid #eef2f7;
+      border-bottom: 1px solid #eef2f7;
+      font-weight: 650;
+      color: #334155;
+    }
+
+    td:first-child {
+      border-left: 1px solid #eef2f7;
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+      color: #0f172a;
+      font-weight: 900;
+    }
+
+    td:last-child {
+      border-right: 1px solid #eef2f7;
+      border-top-right-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-blue {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-yellow {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .side-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .side-item {
+      padding: 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #eef2f7;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .side-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: #16a34a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .side-title {
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .side-text {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #16a34a;
+      color: white;
+      box-shadow: 0 10px 22px rgba(22, 163, 74, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #15803d;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .cards,
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        padding: 12px;
+      }
+
+      .main {
+        padding: 18px;
+      }
+
+      .topbar,
+      .work-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      select {
+        min-width: 100%;
+        width: 100%;
+      }
+
+      .cards,
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">S</div>
+        <div class="logo-text">
+          Project<br />Monitor
+        </div>
+      </div>
+
+      <div class="menu-title">Area sviluppatore</div>
+      <div class="menu-item active">Dashboard personale</div>
+      <div class="menu-item">Task assegnati</div>
+      <div class="menu-item">Bug assegnati</div>
+      <div class="menu-item">Aggiorna stato task</div>
+      <div class="menu-item">Aggiorna stato bug</div>
+      <div class="menu-item">Segnala bug</div>
+      <div class="menu-item">Storico attività</div>
+    </aside>
+
+    <main class="main">
+
+      <section class="topbar">
+        <div class="title-block">
+          <h1>Home Sviluppatore</h1>
+          <p>
+            Consultazione delle attività assegnate, aggiornamento dello stato dei task e gestione dei bug in lavorazione.
+          </p>
+        </div>
+
+        <div class="user-box">
+          <div class="avatar">SV</div>
+          <div>
+            <div class="user-name">Sviluppatore</div>
+            <div class="user-role">Accesso autorizzato</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="work-row">
+        <div class="project-select">
+          <label for="project">Progetto corrente</label>
+          <select id="project">
+            <option>Sistema Gestione e Monitoraggio Progetti Software</option>
+            <option>Portale Bug Tracking</option>
+            <option>Applicazione Monitoraggio Team</option>
+          </select>
+        </div>
+
+        <div class="status-group">
+          <span class="pill pill-green">Task attivi: 5</span>
+          <span class="pill pill-blue">Bug assegnati: 3</span>
+          <span class="pill pill-orange">Priorità alta: 2</span>
+        </div>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <div class="card-label">Task assegnati</div>
+          <div class="card-value green-value">8</div>
+          <div class="card-note">Task collegati allo sviluppatore</div>
+        </article>
+
+        <article class="card blue">
+          <div class="card-label">In corso</div>
+          <div class="card-value">5</div>
+          <div class="card-note">Attività attualmente in lavorazione</div>
+        </article>
+
+        <article class="card orange">
+          <div class="card-label">Da completare</div>
+          <div class="card-value">3</div>
+          <div class="card-note">Task ancora da chiudere</div>
+        </article>
+
+        <article class="card red">
+          <div class="card-label">Bug assegnati</div>
+          <div class="card-value">3</div>
+          <div class="card-note">Bug da analizzare o risolvere</div>
+        </article>
+      </section>
+
+      <section class="focus-panel">
+        <div class="focus-top">
+          <strong>Avanzamento personale</strong>
+          <span class="focus-percent">72%</span>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+
+        <div class="focus-caption">
+          La percentuale indica il rapporto tra attività completate e attività assegnate allo sviluppatore.
+        </div>
+      </section>
+
+      <section class="quick-actions">
+        <button class="action-card" onclick="apriSchermata('modificaTaskSviluppatore.html')">
+          <div class="action-icon icon-green">T</div>
+          <div class="action-title">Aggiorna task</div>
+          <div class="action-text">Modifica lo stato dei task assegnati nei limiti consentiti dal ruolo.</div>
+        </button>
+
+        <button class="action-card" onclick="apriSchermata('modificaBug.html')">
+          <div class="action-icon icon-blue">B</div>
+          <div class="action-title">Aggiorna bug</div>
+          <div class="action-text">Gestisci lo stato dei bug assegnati durante la lavorazione.</div>
+        </button>
+
+        <button class="action-card" onclick="apriSchermata('segnalazioneBug.html')">
+          <div class="action-icon icon-orange">!</div>
+          <div class="action-title">Segnala bug</div>
+          <div class="action-text">Registra un nuovo bug collegato al progetto o a un task.</div>
+        </button>
+      </section>
+
+      <section class="content-grid">
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Task assegnati</h2>
+              <div class="panel-subtitle">Elenco delle attività su cui lo sviluppatore può intervenire.</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome Task</th>
+                <th>Milestone</th>
+                <th>Scadenza</th>
+                <th>Stato</th>
+                <th>Priorità</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>T04</td>
+                <td>Implementazione login e RBAC</td>
+                <td>M2 - Progettazione</td>
+                <td>12/05/2026</td>
+                <td><span class="badge badge-yellow">In corso</span></td>
+                <td><span class="badge badge-red">Alta</span></td>
+              </tr>
+
+              <tr>
+                <td>T09</td>
+                <td>Repository gestione task</td>
+                <td>M2 - Progettazione</td>
+                <td>16/05/2026</td>
+                <td><span class="badge badge-blue">Assegnato</span></td>
+                <td><span class="badge badge-yellow">Media</span></td>
+              </tr>
+
+              <tr>
+                <td>T12</td>
+                <td>Storico modifiche task</td>
+                <td>M3 - Implementazione</td>
+                <td>21/05/2026</td>
+                <td><span class="badge badge-green">Completato</span></td>
+                <td><span class="badge badge-green">Bassa</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="actions">
+            <button class="btn-primary" onclick="apriSchermata('modificaTaskSviluppatore.html')">Aggiorna stato task</button>
+            <button class="btn-secondary" onclick="apriSchermata('storicoModificheTask.html')">Visualizza storico</button>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <h2>Bug assegnati</h2>
+          <div class="panel-subtitle">Bug aperti o in lavorazione assegnati allo sviluppatore.</div>
+
+          <div class="side-list">
+            <div class="side-item">
+              <div class="side-icon">B1</div>
+              <div>
+                <div class="side-title">Errore validazione login</div>
+                <div class="side-text">Priorità alta - stato: in lavorazione.</div>
+              </div>
+            </div>
+
+            <div class="side-item">
+              <div class="side-icon" style="background:#2563eb;">B2</div>
+              <div>
+                <div class="side-title">Dashboard non aggiornata</div>
+                <div class="side-text">Priorità media - stato: aperto.</div>
+              </div>
+            </div>
+
+            <div class="side-item">
+              <div class="side-icon" style="background:#f59e0b;">B3</div>
+              <div>
+                <div class="side-title">Filtro task non corretto</div>
+                <div class="side-text">Priorità media - stato: in lavorazione.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn-primary" onclick="apriSchermata('modificaBug.html')">Gestisci bug</button>
+          </div>
+        </aside>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function apriSchermata(nomeFile) {
+      alert("Apertura schermata: " + nomeFile);
+    }
+  </script>
+</body>
+</html>
